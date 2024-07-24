@@ -25,11 +25,13 @@
           <div v-for="article in news" :key="article.url" class="news-article">
             <h2>{{ article.title }}</h2>                            <!-- Show title -->
             <p>{{ article.description }}</p>                        <!-- Show description -->
+            <p>{{ article.author }}</p>                             <!-- Show author -->
+            <p> Veröffentlicht am: {{ article.publishedAt }}</p>    <!-- Show published time -->
             <a :href="article.url" target="_blank">Weiterlesen</a>  <!-- Show link to full article -->
           </div>
         </div>
         <div v-else>
-          <p>Keine Nachrichten verfügbar.</p> <!-- Message if no news available -->
+          <p>Keine Nachrichten unter '{{ searchTerm }}' verfügbar.</p> <!-- Message if no news available -->
         </div>
       </div>
       <div v-if="selectedTab === 'Folge ich'">
@@ -39,11 +41,13 @@
           <div v-for="article in filteredNews" :key="article.url" class="news-article">
             <h2>{{ article.title }}</h2>                            <!-- Show filtered article title -->
             <p>{{ article.description }}</p>                        <!-- Show filtered article description -->
+            <p>{{ article.author }}</p>                             <!-- Show author -->
+            <p> Veröffentlicht am: {{ article.publishedAt }}</p>    <!-- Show published time -->
             <a :href="article.url" target="_blank">Weiterlesen</a>
           </div>
         </div>
         <div v-else>
-          <p>Keine Nachrichten verfügbar.</p> <!-- If no filtered news were found -->
+          <p>Keine Nachrichten unter '{{ searchTerm }}' verfügbar.</p> <!-- If no filtered news were found -->
         </div>
       </div>
     </div>
@@ -66,15 +70,15 @@ export default {
     };
   },
   computed: {
-  filteredNews() {
-    return this.news.filter(article => {
-      const title = article.title || '';              // Ensure title is not null
-      const description = article.description || '';  // Ensure description is not null
-      return this.savedSearchTerms.some(term =>
-        title.includes(term) || description.includes(term)  // Check if title or description includes any saved term 
-      );
-    });
-  }
+    filteredNews() {
+      return this.news.filter(article => {
+        const title = article.title || '';              // Ensure title is not null
+        const description = article.description || '';  // Ensure description is not null
+        return this.savedSearchTerms.some(term =>
+          title.includes(term) || description.includes(term)  // Check if title or description includes any saved term 
+        );
+      });
+    }
   },
   methods: {
     async fetchNews() {
