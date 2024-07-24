@@ -18,9 +18,9 @@
       </div>
     </header>
     <div class="content">
-    <div v-if="selectedTab === 'Startseite'">
-      <h1>Startseite</h1>
-      <p>Willkommen zur Startseite!</p>
+      <div v-if="selectedTab === 'Startseite'">
+        <h1>Startseite</h1>
+        <p>Willkommen zur Startseite!</p>
         <div class="news-container" v-if="news.length">
           <div v-for="article in news" :key="article.url" class="news-article">
             <h2>{{ article.title }}</h2>                            <!-- Show title -->
@@ -37,8 +37,8 @@
       <div v-if="selectedTab === 'Folge ich'">
         <h1>Folge ich</h1>
         <p>Nachrichten basierend auf deinen gespeicherten Suchbegriffen:</p>
-        <div class="news-container" v-if="filteredNews.length">
-          <div v-for="article in filteredNews" :key="article.url" class="news-article">
+        <div class="news-container" v-if="followedNews.length">
+          <div v-for="article in followedNews" :key="article.url" class="news-article">
             <h2>{{ article.title }}</h2>                            <!-- Show filtered article title -->
             <p>{{ article.description }}</p>                        <!-- Show filtered article description -->
             <p>{{ article.author }}</p>                             <!-- Show author -->
@@ -47,7 +47,7 @@
           </div>
         </div>
         <div v-else>
-          <p>Keine Nachrichten unter '{{ searchTerm }}' verfügbar.</p> <!-- If no filtered news were found -->
+          <p>Keine Nachrichten für die gespeicherten Begriffe verfügbar.</p> <!-- If no filtered news were found -->
         </div>
       </div>
     </div>
@@ -64,14 +64,15 @@ export default {
     return {
       tabs: ['Startseite', 'Für mich', 'Folge ich', 'News Showcase'], // Tab names
       selectedTab: 'Startseite',  // Default selected tab
-      news: [],                   // Arry to store news articles 
+      news: [],                   // Array to store news articles 
       searchTerm: '',             // Current search term
       savedSearchTerms: [],       // Array of saved search terms
+      followedNews: []            // Array to store news articles for followed terms
     };
   },
   computed: {
     filteredNews() {
-      return this.news.filter(article => {
+      return this.followedNews.filter(article => {
         const title = article.title || '';              // Ensure title is not null
         const description = article.description || '';  // Ensure description is not null
         return this.savedSearchTerms.some(term =>
@@ -111,11 +112,30 @@ export default {
       } catch (error) {
         console.error('Fehler beim Suchen der Nachrichten:', error);  // Log error if searching fails
       }
-  },
-  saveSearchTerm() {
+    },
+    async fetchNewsForSavedTerms() {
+      try {
+        const allArticles = [];
+        for (const term of this.savedSearchTerms) {
+          const response = await axios.get('https://newsapi.org/v2/everything', {
+            params: {
+              q: term,                       // Query parameter for saved search term
+              language: 'de',
+              apiKey: '10f70c5f0807412da77d2a06379a6012'
+            }
+          });
+          allArticles.push(...response.data.articles); // Add fetched articles to the array
+        }
+        this.followedNews = allArticles;               // Store all fetched articles in followedNews array
+      } catch (error) {
+        console.error('Fehler beim Abrufen der Nachrichten für gespeicherte Begriffe:', error); // Log error if fetching fails
+      }
+    },
+    saveSearchTerm() {
       if (this.searchTerm && !this.savedSearchTerms.includes(this.searchTerm)) {
         this.savedSearchTerms.push(this.searchTerm);  // Add search term to savedSearchTerms array
         this.searchTerm = '';                         // Clear the search term input
+        this.fetchNewsForSavedTerms();                // Fetch news for saved search terms
       }
     }
   },
